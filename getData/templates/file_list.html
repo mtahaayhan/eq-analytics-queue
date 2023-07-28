@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css"
+      rel="stylesheet"
+    />
+    <title>File List</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+
+      <form method="post" enctype="multipart/form-data" class="mb-4">
+        {% csrf_token %}
+        <label for="folder" class="block mb-2">Bir klasör seçin:</label>
+        <input
+          type="file"
+          id="folder"
+          webkitdirectory
+          directory
+          multiple
+          name="folder"
+          required
+          class="border rounded py-2 px-4 w-50 mb-2"
+        />
+
+        <h2 class="text-2xl font-bold mb-2 " id = "file_list_title"></h2>
+        <div id="fileListContainer" class="mb-4">
+          <ul id="fileList" class="list-disc pl-8"></ul>
+        </div>
+
+        <label for="name" class="block mb-2">İşlemi Yapan:</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          class="border rounded py-2 px-4 w-50 mb-2"
+        />
+        <input
+          type="submit"
+          value="Gönder"
+          class="bg-blue-500 hover:bg-blue-700 text-white w-50 font-bold py-2 px-4 rounded"
+        />
+      </form>
+
+
+
+      <h2 class="text-2xl font-bold mb-2">Yüklenen Veriler</h2>
+      <table id="fileTable" class="w-full border-collapse">
+        <thead>
+          <tr>
+            <th class="border p-2">Dosya Adı</th>
+            <th class="border p-2">Deprem Zamanı</th>
+            <th class="border p-2">Boylam</th>
+            <th class="border p-2">Enlem</th>
+            <th class="border p-2">Derinlik</th>
+            <th class="border p-2">Büyüklük</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for earthquake_object in earthquake_objects %}
+          <tr>
+            <td class="border p-2">
+              {{ earthquake_object.file_UUID__file_name }}
+            </td>
+            <td class="border p-2">{{ earthquake_object.eq_datetime }}</td>
+            <td class="border p-2">{{ earthquake_object.longitude }}</td>
+            <td class="border p-2">{{ earthquake_object.latitude }}</td>
+            <td class="border p-2">{{ earthquake_object.depth }}</td>
+            <td class="border p-2">{{ earthquake_object.magnitude }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        $("#fileTable").DataTable({
+          paging: true,
+          lengthChange: false,
+          searching: true, // Set to true to enable searching
+          ordering: true,
+          info: true,
+          autoWidth: false,
+          language: {
+            paginate: {
+              previous: "&laquo;",
+              next: "&raquo;",
+            },
+          },
+        });
+      });
+
+      // Dosya yükleme inputunu seçin
+      const fileInput = document.getElementById("folder");
+
+      // Dosya listesi için <ul> elementini seçin
+      const fileList = document.getElementById("fileList");
+
+      const file_list_title = document.getElementById("file_list_title");
+
+      // Dosya inputunda bir değişiklik olduğunda çalışacak fonksiyonu tanımlayın
+      fileInput.addEventListener("change", function () {
+        // Dosya listesini temizleyin
+        fileList.innerHTML = "";
+
+        // Seçilen dosyaları alın
+        const files = fileInput.files;
+
+        // Geçerli dosya uzantıları
+        const validExtensions = [".csv", ".xls", ".xlsx"];
+
+        // Dosya adlarını listeleyin
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fileName = file.name;
+          const fileExtension = fileName
+            .slice(fileName.lastIndexOf("."))
+            .toLowerCase();
+
+          if (validExtensions.includes(fileExtension)) {
+            const listItem = document.createElement("li");
+            listItem.textContent = fileName;
+            fileList.appendChild(listItem);
+          }
+        }
+        file_list_title.innerHTML = "Seçilen Dosyalar";
+      });
+    </script>
+  </body>
+</html>

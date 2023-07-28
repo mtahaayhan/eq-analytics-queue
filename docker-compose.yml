@@ -1,0 +1,46 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ./.env
+
+      
+  django:
+    build: .
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./media:/app/media
+     
+  celery:
+    build: .
+    restart: always
+    command: celery -A testEarthquakeAnalysis worker --loglevel=info
+    env_file:
+      - ./.env
+    depends_on:
+      - rabbitmq
+      - db
+    volumes:
+      - ./media:/app/media
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "54320:5432"
+    env_file:
+      - ./.env
+
+volumes:
+  postgres_data:
